@@ -15,13 +15,12 @@ def get_nearest_base_time():
     현재 시간을 기준으로 가장 가까운 발표 시간(base_time)을 계산하는 함수.
     """
     now = datetime.datetime.now()
-    one_day_ago = now - datetime.timedelta(days=1)
     current_time = int(now.strftime('%H%M'))  # 현재 시간을 분 단위로 변환
 
     # 발표 시간 설정: 현재 시간보다 이전의 발표 시간 중 가장 최근의 것을 찾기 위해
     if current_time < 210:  # 00:00 이전
         base_time = '2300'  # 전날 23시
-        base_date = one_day_ago.strftime('%Y%m%d')
+        base_date = (now - datetime.timedelta(days=1)).strftime('%Y%m%d')
     elif current_time < 510:  # 02:00 이전
         base_time = '0200'  # 당일 02시
         base_date = now.strftime('%Y%m%d')
@@ -55,6 +54,10 @@ def get_weather2():
     GET 요청을 받아 기상청 API를 사용하여 날씨 정보를 가져오는 함수.
     """
     try:
+        now = datetime.datetime.now()
+        current_date = now.strftime('%Y%m%d')
+        current_time = int(now.strftime('%H'))
+
         # 가장 가까운 발표 시간을 계산
         base_date, base_time = get_nearest_base_time()
 
@@ -108,11 +111,11 @@ def get_weather2():
         weather_data = {}
 
         def map_sky_code(sky_code):
-            if '0' <= sky_code <= '5':
+            if '0' <= sky_code <= '1':
                 return "맑음"
-            elif '6' <= sky_code <= '8':
+            elif '3' <= sky_code:
                 return "구름 많음"
-            elif '9' <= sky_code <= '10':
+            elif '4' <= sky_code:
                 return "흐림"
             else:
                 return "알 수 없음"
@@ -125,6 +128,8 @@ def get_weather2():
         for weather_item in weather_items:
             fcstDate = weather_item.find('.//fcstDate').text  # 예보 날짜
             fcstTime = int(weather_item.find('.//fcstTime').text)  # fcstTime을 정수형으로 변환
+            baseDate = base_date
+            base_time = base_time
             fcstValue = weather_item.find('.//fcstValue').text
             category = weather_item.find('.//category').text
 
@@ -146,7 +151,7 @@ def get_weather2():
                     weather_data['pop'] = f"{fcstValue}%"
                 elif category == 'PTY':  # 강수 형태
                     if fcstValue == '0':
-                        weather_data['pty'] = "none"
+                        weather_data['pty'] = "없음"
                     elif fcstValue == '1':
                         weather_data['pty'] = "비"
                     elif fcstValue == '2':
