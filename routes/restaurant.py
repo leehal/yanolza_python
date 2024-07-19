@@ -132,7 +132,7 @@ def get_restaurant_ggd():
 #         if response.status_code == 200:  # 응답 확인
 #             print('데이터 전송 성공')
 #         else:
-#             print('데이터 전송 실패')
+#             logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
 # 응답 데이터를 텍스트 형태로 변환하여 반환
         response_text = "\n\n".join([
             f"tcategory : {item['tcategory']}\ntname : {item['tname']}\nmain : {item['main']}\ntaddr : {item['taddr']}\nphone : {item['phone']}"
@@ -227,23 +227,30 @@ def get_restaurant_ccnd():
 # 데이터 포맷 : JSON
 def get_restaurant_ghs():
 # URL 잘 나오고 있음
-    url = 'http://www.gimhae.go.kr/openapi/tour/restaurant.do?pageunit=10&page=25'
+    url = 'http://www.gimhae.go.kr/openapi/tour/restaurant.do?pageunit=10&page=27'
     # pageunit = 269
     # page = 27
     try:
 # JSON 데이터 가져오기
         response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
-# 필요한 데이터 추출하여 festivals 리스트에 저장
-        restaurant = data['results']
+# 필요한 데이터 추출하여 리스트에 저장
+        restaurants = data['results']
         restaurant_data = []
-        for item in restaurant:
+        for item in restaurants:
             timage = item.get("images")
             if isinstance(timage, list):
                 timage = timage[0] if timage else ""
+            taddr = item.get('address', 'N/A')
+            if not taddr.startswith('경상남도 김해시'):
+                if taddr.startswith('김해시'):
+                    taddr = '경상남도 ' + taddr
+                else:
+                    taddr = '경상남도 김해시 ' + taddr
             restaurant = {
                 'tname': item.get('name', 'N/A'),
-                'taddr': item.get('address', 'N/A'),
+                'taddr': taddr,
                 'tcategory': '맛집',
                 'timage': timage,
                 'phone': item.get('phone', 'N/A'),
@@ -253,13 +260,13 @@ def get_restaurant_ghs():
             }
             restaurant_data.append(restaurant)
 # 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
-        # url1 = 'http://localhost:8222/api/travel'
-        # headers = {"Content-Type": "application/json"}
-        # response = requests.post(url1, data=json.dumps(festivals_data), headers=headers)
-        # if response.status_code == 200:  # 응답 확인
-        #     print('데이터 전송 성공')
-        # else:
-        #     print('데이터 전송 실패')
+        url1 = 'http://localhost:8222/api/travel'
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url1, data=json.dumps(restaurant_data), headers=headers)
+        if response.status_code == 200:  # 응답 확인
+            print('데이터 전송 성공')
+        else:
+            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
         # HTML 템플릿을 사용하여 결과를 반환
         html_template = """
             <!DOCTYPE html>
@@ -268,7 +275,7 @@ def get_restaurant_ghs():
                 <meta charset="UTF-8">
             </head>
             <body>
-                {% for restaurant in restaurants %}
+                {% for restaurant in restaurant_data %}
                     <h4>tname : {{ restaurant.tname }}</h2>
                     <p>tcategory : 맛집</p>
                     <p>taddr : {{ restaurant.taddr }}</p>
@@ -280,16 +287,16 @@ def get_restaurant_ghs():
                         {% if restaurant.timage %}
                             <img src="{{ restaurant.timage }}" alt="맛집 이미지">
                         {% else %}
-                            이미지 없음
                         {% endif %}
                     </p><hr>
                 {% endfor %}
             </body>
             </html>
             """
-        return render_template_string(html_template, restaurant=restaurant_data)
+        return render_template_string(html_template, restaurant_data=restaurant_data)
     except Exception as e:
         return f"Error: {str(e)}", 500
+# 성공!
 
 # 대구광역시_맛집(https://www.data.go.kr/data/15057236/openapi.do)
 # 데이터 포맷 : JSON
@@ -323,7 +330,7 @@ def get_restaurant_dgs():
         # if response.status_code == 200:  # 응답 확인
         #     print('데이터 전송 성공')
         # else:
-        #     print('데이터 전송 실패')
+        #     logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
         # HTML 템플릿을 사용하여 결과를 반환
         html_template = """
             <!DOCTYPE html>
