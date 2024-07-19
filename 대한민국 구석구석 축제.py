@@ -2,36 +2,35 @@ import logging
 import schedule
 import time
 import json
+import re
 import requests
 from bs4 import BeautifulSoup
 
 def perform_web_crawling():
-    url = "https://korean.visitkorea.or.kr/kfes/detail/fstvlDetail.do?fstvlCntntsId=e4351add-7b59-4842-b3b5-c38062b47c7c&cntntsNm=%EC%96%91%ED%99%94%EC%A7%84%EA%B7%BC%EB%8C%80%EC%82%AC%EB%B1%83%EA%B8%B8%ED%83%90%EB%B0%A9"
+    url = "https://korean.visitkorea.or.kr/kfes/list/wntyFstvlList.do"
+# 축제 하나하나 다 눌러보기
     response = requests.get(url)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
+        def extract_text(selector, attribute=None, regex=False):
+            try:
+                if regex:
+                    return soup.find('a', href=re.compile(attribute)).text.strip()
+                return soup.find(selector, class_=attribute).text.strip() if attribute else soup.find(selector).text.strip()
+            except AttributeError:
+                return None
         festivals = []
-# 필요한 정보 추출
-        guide = soup.find('span', class_='sub_title').text.strip()
-        tname = soup.find('h2', id='festival_head').text.strip()
-        info = soup.find('div', class_='slide_content.fst').text.strip().replace('\n', ' ')
-        timage = soup.find('img', alt='2024 양화진 근대사 뱃길탐방 포스터').text.strip()
-        season = soup.find('span', class_='blind', text='축제 기간').text.strip().text.strip()
-        taddr = soup.find('div', {'@type': 'PostalAddress'}).text.strip()
-        tprice = soup.find('div', class_='info_ico price').text.strip().replace('<br>', ' / ')
-        phone = soup.find('a', href=re.compile(r'tel:')).text.strip()
-        homepage = soup.find('a', class_='homepage_link_btn')['href']
         festival_data = {
-            "guide": guide,
-            "tname": tname,
-            "info": info,
-            "timage": timage,
-            "season": season,
+            "guide": extract_text('span', 'sub_title'),
+            "tname": soup.find('h2', id='festival_head').text.strip(),
+            "info": extract_text('div', 'slide_content fst'),
+            "timage": soup.find('img', alt='2024 양화진 근대사 뱃길탐방 포스터')['src'],
+            "season": soup.find('span', class_='blind', string='축제 기간').find_next_sibling('span').text.strip(),
             "tcategory": "축제",
-            "taddr": taddr,
-            "tprice": tprice,
-            "phone": phone,
-            "homepage": homepage
+            "taddr": extract_text('p', 'info_content'),
+            "tprice": soup.find('div', class_='info_ico price').find_next_sibling('p').text.strip().replace('<br>', ' / '),
+            "phone": extract_text('a', r'tel:', regex=True),
+            "homepage": soup.find('a', class_='homepage_link_btn')['href']
         }
 # 데이터를 예쁘게 출력하기 위해 JSON 형식으로 변환
         festivals.append(festival_data)

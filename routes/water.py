@@ -6,51 +6,6 @@ from flask import Flask, jsonify, request, render_template_string, Response
 import xmltodict
 import urllib.parse
 
-LAYER_NAMES = [
-    'TB_YACHT_RPNT', 'TB_FACI_FSHLC', 'TB_FACI_SPORT', 'TB_YACHT_MARINA_P',
-    'TL_RFISHERY_P' 'TL_SFISHERY_P', 'TB_FACI_TEMPLE', 'TB_YACHT_SPOINT',
-    'TB_SAILER', 'TB_FACI_GARDEN', 'VI_SEA_VR', 'TB_FACI_FISHPORT',
-    'TB_FACI_FILMSITE', 'TL_RUTE_L', 'TB_FACI_SCENIC', 'TB_FACI_FISHINGOLE',
-    'TB_FACI_EXHIBIT', 'TL_CONECT_L', 'TL_ALLRUTE_L', 'TL_MARINA_L',
-    'TB_FACI_FESTIVAL', 'TB_FACI_CAMPSITE', 'TB_FACI_THEMEPARK', 'VI_BCROAD_L',
-    'TB_FACI_MARINTRAFF', 'TB_FACI_BEACH', 'TB_FACI_TRAIL', 'TB_FACI_RCRFCT',
-    'TB_AREA_NAME_OCEAN', 'TL_FPILBOAT_A', 'TL_QUAARE_A', 'TB_ZN_MING',
-    'TB_ZN_TRSF', 'VI_ZN_CYFST', 'TL_RESARE_ENS', 'TL_RESARE_FR',
-    'TB_ZN_TRDEPT', 'TL_CLRGN_FSPT_A', 'TB_ZN_INDWSTE', 'TL_VTMSA_A',
-    'TL_HJPMMP_A', 'TL_SARDRA_L', 'ML_ZN_WTR_LEIS_PRO_L', 'TL_SHMSCH_A',
-    'TL_JUKJGY_L', 'TL_EUJOBHSY_L', 'TB_ZN_FRRSR', 'TL_DIST_FSHFRM',
-    'TL_CSTZNE_A', 'TL_YACSGRGY_P', 'TL_MIDS_P', 'TB_ZN_TRTSEA',
-    'TL_TISVCONA_A', 'TB_ZN_OKR', 'TL_RESARE_AP', 'TL_RSTRCT_A',
-    'TB_ZN_FSHOPR', 'TL_FSHSPA_A', 'TL_SWYWRN_A', 'TL_KMSTARE_L',
-    'VI_STSLNE_L', 'TL_RESARE_EN', 'TL_RESARE_ER', 'TL_WAINARE_A',
-    'TL_SSAONFI_A', 'TL_SSAONFI_L', 'TL_CAPBANA_A', 'TL_HNINTZ_A',
-    'TL_HNINTZ_L', 'TL_GDSE_A', 'TL_BECONSSA_A', 'ML_RESARE_RESTRN_27_A',
-    'TL_HMBHDJ_P', 'TL_HAEGU_A', 'TB_ZN_SEATN', 'TB_SLFTN_FRT_REGL_SAR_L',
-    'ML_ZN_MRT_LEIS_PER_L', 'TB_ZN_EVSR', 'TL_KCGAREA_A', 'TL_CCTVVI_P',
-    'TL_POLTRP_P', 'VI_TIDEWY_L', 'VI_UWTROC_P', 'TL_POLSTA_P',
-    'TL_STWA_A', 'VI_DWRTPT_A', 'VI_LNDARE_P', 'TL_PTGSCT_ETRYPT_L',
-    'TL_PTGSCT_TKOFF_L', 'VI_PILBOP_P', 'VI_FERYRT_L', 'VI_LNDMRK_P',
-    'TL_HOSPAL_P', 'TL_PUBHEA_P', 'VI_DOCARE_A', 'VI_SHPACC_P',
-    'VI_BERTHS_P', 'TL_BERTH_A', 'TL_BERTH_P', 'TL_TURNBASI_A',
-    'TL_FIRSTA_P', 'TL_SOUNDG_P', 'TL_PARMAC_P', 'VI_TWRTPT_A',
-    'TL_OBSTRN_P', 'TL_MGWA_A', 'VI_NSHPAC_P', 'VI_FAIRWY_A',
-    'VI_ACHARE_A', 'TB_ZN_ROUTE', 'TL_WRECK_P', 'VI_TSSBND_L',
-    'VI_TSSCRS_A', 'VI_TSEZNE_A', 'VI_TSELNE_L', 'VI_TSSLPT_A',
-    'TL_SMWA_A', 'TL_SEAWAY_A', 'VI_NAVLNE_L', 'TL_COAGUA_P',
-    'VI_TIDCHA_A', 'TL_LEIHAZ_TIDCHA_L_2019', 'TL_PBLOFC_P', 'TL_LEQMBD_P',
-    'TL_LEIHAZ_TROTSE_A', 'TL_LESALI_L', 'TL_TKTOFC_P', 'TL_SHWROM_P',
-    'TL_MALIRE_P', 'TL_SWMRES_L', 'TL_ACCOMM_P', 'TL_INFSIG_P',
-    'TL_WCHTWR_P', 'TL_DGSATC_SUBMEROC_P', 'TL_NIFIZO_P', 'TL_KIDZON_P',
-    'TL_HOTSPR_P', 'VI_PUDDLE_A', 'TL_DRIFOU_P', 'VI_OFFCUR_A',
-    'TL_RESCUE_P', 'TL_WARSYS_P', 'TL_INFCEN_P', 'TL_PRKPLC_P',
-    'TL_DREROM_P', 'TL_TUBLND_P', 'TL_ADSECE_P', 'TL_TOILET_P',
-    'TL_SMOZON_P', 'VI_BOYINB_P', 'VI_MORFAC_P', 'VI_BOYCAR_P',
-    'VI_BCNCAR_P', 'VI_BOYSAW_P', 'VI_SLCONS_L', 'VI_BCNLAT_P',
-    'VI_BOYSPP_P', 'VI_BCNSPP_P', 'VI_HRBARE_A', 'TB_SAILER_5030105',
-    'TL_VTSCEN_P', 'VI_CBLSUB_L', 'TB_COAST_STAT_INFO', 'TB_SANDRIDGE_BOUNDARY',
-    'TB_SAILER_5030103', 'TB_SAILER_5030104', 'TB_SAILER_5030102', 'VI_BCNISD_P'
-]
-
  # 경기도_낚시터 현황
 # https://data.gg.go.kr/portal/data/service/selectServicePage.do?page=1&rows=10&sortColumn=&sortDirection=&infId=8M2AW008ZZ275DEX8997536167&infSeq=3
 # 데이터 포맷 : XML
@@ -87,7 +42,7 @@ def get_fishing_ggd():
             'tprice': tprice
         }
         fishing_data.append(fishing)
-    # 스프링 부트 RestController 엔드포인트 URL
+# 스프링 부트 RestController 엔드포인트 URL
     url1 = 'http://localhost:8222/api/travel'
     headers = {"Content-Type": "application/json"}
     response = requests.post(url1, data=json.dumps(fishing_data), headers=headers)
@@ -95,7 +50,6 @@ def get_fishing_ggd():
         print('데이터 전송 성공')
     else:
         logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
-#     print(fishing_data)
     response_text = ""
     for data in fishing_data:
         response_text += f"tname : {data['tname']}\n"
@@ -117,85 +71,117 @@ def get_hot_spring():
         return Response(f"Error: {str(e)}", status=500)
     soup = BeautifulSoup(response.content, 'xml')
     items = soup.find_all('row')
-    fishing_data = []
+    place_data = []
     for item in items:
         tname = item.find('HOTSPA_NM').text if item.find('HOTSPA_NM') else '정보없음'
+        if '스파' not in tname and '온수' not in tname:
+            tname += ' 온천'
         road_addr = item.find('REFINE_ROADNM_ADDR')
         lot_addr = item.find('REFINE_LOTNO_ADDR')
-        taddr = road_addr.text if road_addr and road_addr.text.strip() \
-            else (lot_addr.text if lot_addr else '정보없음')
+        taddr = road_addr.text if road_addr and road_addr.text.strip() else (lot_addr.text if lot_addr else '정보없음')
         if not taddr: # 주소 없으면 출력 X
             continue
         info = item.find('INGRDNT_NM').text if item.find('INGRDNT_NM') else '정보없음'
-        fishing_data.append({
-            'tname': tname, # 온천
+        info = f"성분명 : {info}"
+        temp = item.find('HOTSPRG_TP').text if item.find('HOTSPRG_TP') else '정보없음'
+        depth = item.find('HOTSPRG_DPH').text if item.find('HOTSPRG_DPH') else '정보없음'
+        guide = f"온천온도 : {temp} / 온천심도 : {depth}"
+        hot_spring = {
+            'tname': tname,
             'tcategory': "관광",
             'taddr': taddr,
-            'info': info # + guide
-        })
+            'info': info,
+            'guide': guide
+        }
+        place_data.append(hot_spring)
+# 스프링 부트 RestController 엔드포인트 URL
+    url1 = 'http://localhost:8222/api/travel'
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(url1, data=json.dumps(place_data), headers=headers)
+    if response.status_code == 200:
+        print('데이터 전송 성공')
+    else:
+        logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
     response_text = ""
-    for data in fishing_data:
+    for data in place_data:
         response_text += f"tname : {data['tname']}\n"
         response_text += f"tcategory : 관광\n"
         response_text += f"taddr : {data['taddr']}\n"
-        response_text += f"info : 성분명 : {data['info']}\n\n"
+        response_text += f"guide : {data['guide']}\n"
+        response_text += f"info : {data['info']}\n\n"
     return Response(response_text, mimetype='text/plain')
 
-def get_beach_leisure():
+# 레이어는 url에 각각 요청해야 하며 xml/json 방식으로 호출 가능한 레이어는 일부만 가능
+def get_beach():
 # GET Param 방식 요청
-    API_KEY = '4D048B473A8EABF8A7B7F2C54'
-    API_KEY_decode = requests.utils.unquote(API_KEY)
 # 요청 주소 및 요청 변수 지정(공공데이터포털 - 데이터찾기 - 레저관광 검색 - 오픈API상세 - URL - 오픈API신청)
-    url = 'http://www.khoa.go.kr/oceanmap/otmsInfoApi.do?ServiceKey='
+    layer_1 = ['VI_ZN_CYFST'] # 국가어항
+    layer_2 = ['TB_SAILER_5030103', 'TB_SAILER_5030104', 'TB_SAILER_5030102', 'TB_SAILER_5030105'] # 국가무역항, 지방무역항, 지방항, 연안항
+    all_layers = layer_1 + layer_2
+    all_beach_data = []
+    for layer in all_layers:
+        url = f'http://www.khoa.go.kr/oceanmap/otmsInfoApi.do?ServiceKey=4D048B473A8EABF8A7B7F2C54&Layer={layer}&numOfRows=245'
 # 한 페이지에 포함된 결과 수
-    num_of_rows = 10
-# 페이지 번호
-    page_no = 1
-# 응답 데이터 형식 지정
-    result_type = 'JSON'
-    for Layer in LAYER_NAMES:
+# num_of_rows = 117, 18, 17, 245, 30
+# result_type = XML OR JSON
         try:
-            response = requests.get(url, params={'Key': API_KEY_decode})
-            response.raise_for_status()
+            response = requests.get(url)
+            response.raise_for_status() # HTTP 오류 발생 시 예외 발생
+            try:
+                dict_data = response.json() # JSON 형태의 응답을 시도하고 실패 시 XML로 처리
+                logging.info(f"Received JSON response for {layer}: {json.dumps(dict_data, ensure_ascii=False, indent=4)}")
+                if 'response' in dict_data and 'body' in dict_data['response'] and 'items' in dict_data['response']['body']:
+                    beach_items = dict_data['response']['body']['items']['item']
+                else:
+                    logging.error(f"Unexpected JSON structure for {layer}")
+                    continue
+            except json.JSONDecodeError:
+                soup = BeautifulSoup(response.content, 'xml')
+                logging.info(f"Received XML response for {layer}: {soup.prettify()}")
+                beach_items = soup.find_all('item')
+            for item in beach_items:
+                taddr = item.find('sigunguNm').text if item.find('sigunguNm') else ""
+                layer1tname = item.find('ZONE_NM').text if item.find('ZONE_NM') else ""
+                layer2tname = item.find('name').text if item.find('name') else ""
+                info = ""
+                guide = ""
+                tname = ""
+                if layer in layer_2:
+                    taddr = f"{taddr} {layer2tname}"
+                    tname = layer2tname
+                    info = item.find('introdu').text if item.find('introdu') else ""
+                elif layer in layer_1:
+                    taddr = f"{taddr} {layer1tname}"
+                    tname = layer1tname
+                    coast = item.find('COAST').text if item.find('COAST') else ""
+                    nfp = item.find('CYFST_CD').text if item.find('CYFST_CD') else ""
+                    guide = f"해안 : {coast} / {nfp}"
+                item_data = {
+                    'taddr': taddr,
+                    'info': info,
+                    'tname': tname,
+                    'guide': guide
+                }
+                item_data = {k: v for k, v in item_data.items() if v}
+                if item_data:
+                    all_beach_data.append(item_data)
         except requests.exceptions.RequestException as e:
-            continue  # 오류가 발생하면 해당 구역을 건너뜀
-    sido_cd = 2800000000
-    req_parameter = {'serviceKey': API_KEY_decode,
-                     'pageNo': page_no, 'numOfRows': num_of_rows,
-                     'Layer': LAYER_NAMES, 'SIDOCD': sido_cd,
-                   # 'resultType': XML OR JSON
-    }
-# 요청 및 응답
+            logging.error(f"Error fetching data from {layer}: {str(e)}")
+        except Exception as e:
+            logging.error(f"Error processing data from {layer}: {str(e)}")
+# 스프링 부트 RestController 엔드포인트 URL
+    url1 = 'http://localhost:8222/api/travel'
+    headers = {"Content-Type": "application/json"}
     try:
-        response = requests.get(url, params=req_parameter)
+        response = requests.post(url1, data=json.dumps(all_beach_data), headers=headers)
+        if response.status_code == 200:
+            print('데이터 전송 성공')
+        else:
+            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred while making a request: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
-# JSON 형태로 응답받은 데이터를 딕셔너리로 변환
-    dict_data = response.json()
-    # 출력을 이쁘게 하기 위해 json.dumps()를 사용하여 들여쓰기(indent) 옵션 지정
-    print(json.dumps(dict_data, indent=2))
-# 딕셔너리 데이터를 분석하여 원하는 데이터를 추출
-    beach_items = dict_data['response']['body']['items']['item']
-    beach_data = {}
-    for k in range(len(beach_items)):
-        beach_item = beach_items[k]
-        obsrValue = beach_item['obsrValue']
-        if beach_item['category'] == 'POINT_NM': # 자료구분코드 = 항목값
-            print(f"[ 지점명 : {obsrValue} ]")
-            beach_data['지점명'] = f"{obsrValue}" # 화면에 보이는 이름
-        elif beach_item['category'] == 'ADR_KNM':
-            print(f"[ 행정구역명 : {obsrValue} ]")
-            beach_data['행정구역명'] = f"{obsrValue}"
-        elif beach_item['category'] == 'TARGET':
-            print(f"[ 지점명 : {obsrValue} ]")
-            beach_data['대상어/낚시채비'] = f"{obsrValue}"
-        elif beach_item['category'] == 'TIDE_TIME':
-            print(f"[ 주요수산물 : {obsrValue} ]")
-            beach_data['적정물때'] = f"{obsrValue}"
-        elif beach_item['category'] == 'MATERIAL':
-            print(f"[ 주요수산물 : {obsrValue} ]")
-            beach_data['해저물질(저질)'] = f"{obsrValue}"
-# 딕셔너리를 JSON 형태로 변환
-    json_beach = json.dumps(beach_data, ensure_ascii=False, indent=4)
-    return json_beach
+        logging.error(f"데이터 전송 예외 발생: {str(e)}")
+
+        # JSON 형태로 변환하여 반환
+    json_beach = json.dumps(all_beach_data, ensure_ascii=False, indent=4)
+    return Response(json_beach, content_type='application/json')
+# 성공!

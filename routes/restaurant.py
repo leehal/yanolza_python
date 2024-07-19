@@ -6,94 +6,155 @@ from flask import Flask, jsonify, request, render_template_string, Response
 import xmltodict
 import urllib.parse
 
+# 로거 설정
+logging.basicConfig(level=logging.INFO)
+
 SEOUL_API_URLS = [
-    # 1. 광진구 모범음식점 지정
-    'http://openapi.gwangjin.go.kr:8088/56586a6766746a6435344e6369494b/xml/GwangjinModelRestaurantDesignate/1/5/',
-    # 2. 강동구 모범음식점 지정
-    'http://openapi.gd.go.kr:8088/56586a6766746a6435344e6369494b/xml/GdModelRestaurantDesignate/1/5/',
-    # 3. 강북구 모범음식점 지정
-    'http://openapi.gangbuk.go.kr:8088/56586a6766746a6435344e6369494b/xml/GbModelRestaurantDesignate/1/5/',
-    # 4. 강서구 모범음식점 지정
+# 1. 강남구 모범음식점 지정
+    'http://openAPI.gangnam.go.kr:8088/56586a6766746a6435344e6369494b/xml/GnModelRestaurantDesignate/1/311/',
+# 2. 강동구 모범음식점 지정
+    'http://openapi.gd.go.kr:8088/56586a6766746a6435344e6369494b/xml/GdModelRestaurantDesignate/1/66/',
+# 3. 강북구 모범음식점 지정
+    'http://openapi.gangbuk.go.kr:8088/56586a6766746a6435344e6369494b/xml/GbModelRestaurantDesignate/1/80/',
+# 4. 강서구 모범음식점 지정
     'http://openapi.gangseo.seoul.kr:8088/56586a6766746a6435344e6369494b/xml/GangseoModelRestaurantDesignate/1/129/',
-    # 5. 관악구 모범음식점 지정
+# 5. 관악구 모범음식점 지정
     'http://openapi.gwanak.go.kr:8088/56586a6766746a6435344e6369494b/xml/GaModelRestaurantDesignate/1/121/',
-    # 6. 광진구 모범음식점 지정
+# 6. 광진구 모범음식점 지정
     'http://openapi.gwangjin.go.kr:8088/56586a6766746a6435344e6369494b/xml/GwangjinModelRestaurantDesignate/1/131/',
-    # 7. 구로구 모범음식점 지정
+# 7. 구로구 모범음식점 지정
     'http://openapi.guro.go.kr:8088/56586a6766746a6435344e6369494b/xml/GuroModelRestaurantDesignate/1/65/',
-    # 8. 금천구 모범음식점 지정
+# 8. 금천구 모범음식점 지정
     'http://openapi.geumcheon.go.kr:8088/56586a6766746a6435344e6369494b/xml/GeumcheonModelRestaurantDesignate/1/39/',
-    # 9. 노원구 모범음식점 지정
+# 9. 노원구 모범음식점 지정
     'http://openapi.nowon.go.kr:8088/56586a6766746a6435344e6369494b/xml/NwModelRestaurantDesignate/1/106/',
-    # 10. 도봉구 모범음식점 지정
+# 10. 도봉구 모범음식점 지정
     'http://openapi.dobong.go.kr:8088/56586a6766746a6435344e6369494b/xml/DobongModelRestaurantDesignate/1/48/',
-    # 11. 동대문구 모범음식점 지정
+# 11. 동대문구 모범음식점 지정
     'http://openapi.ddm.go.kr:8088/56586a6766746a6435344e6369494b/xml/DongdeamoonModelRestaurantDesignate/1/52/',
-    # 12. 동작구 모범음식점 지정
+# 12. 동작구 모범음식점 지정
     'http://openapi.dongjak.go.kr:8088/56586a6766746a6435344e6369494b/xml/DjModelRestaurantDesignate/1/105/',
-    # 13. 마포구 모범음식점 지정
+# 13. 마포구 모범음식점 지정
     'http://openapi.mapo.go.kr:8088/56586a6766746a6435344e6369494b/xml/MpModelRestaurantDesignate/1/182/',
-    # 14. 서대문구 모범음식점 지정
+# 14. 서대문구 모범음식점 지정
     'http://openapi.sdm.go.kr:8088/56586a6766746a6435344e6369494b/xml/SeodaemunModelRestaurantDesignate/1/138/',
-    # 15. 서초구 모범음식점 지정
+# 15. 서초구 모범음식점 지정
     'http://openapi.seocho.go.kr:8088/56586a6766746a6435344e6369494b/xml/ScModelRestaurantDesignate/1/250/',
-    # 16. 성동구 모범음식점 지정
+# 16. 성동구 모범음식점 지정
     'http://openapi.sd.go.kr:8088/56586a6766746a6435344e6369494b/xml/SdModelRestaurantDesignate/1/139/',
-    # 17. 성북구 모범음식점 지정
+# 17. 성북구 모범음식점 지정
     'http://openapi.sb.go.kr:8088/56586a6766746a6435344e6369494b/xml/SbModelRestaurantDesignate/1/77/',
-    # 18. 송파구 모범음식점 지정
+# 18. 송파구 모범음식점 지정
     'http://openapi.songpa.seoul.kr:8088/56586a6766746a6435344e6369494b/xml/SpModelRestaurantDesignate/1/70/',
-    # 19. 양천구 모범음식점 지정
+# 19. 양천구 모범음식점 지정
     'http://openapi.yangcheon.go.kr:8088/56586a6766746a6435344e6369494b/xml/YcModelRestaurantDesignate/1/70/',
-    # 20. 영등포구 모범음식점 지정
+# 20. 영등포구 모범음식점 지정
     'http://openapi.ydp.go.kr:8088/56586a6766746a6435344e6369494b/xml/YdpModelRestaurantDesignate/1/88/',
-    # 21. 용산구 모범음식점 지정
+# 21. 용산구 모범음식점 지정
     'http://openapi.yongsan.go.kr:8088/56586a6766746a6435344e6369494b/xml/YsModelRestaurantDesignate/1/133/',
-    # 22. 은평구 모범음식점 지정
+# 22. 은평구 모범음식점 지정
     'http://openapi.ep.go.kr:8088/56586a6766746a6435344e6369494b/xml/EpModelRestaurantDesignate/1/205/',
-    # 23. 종로구 모범음식점 지정
+# 23. 종로구 모범음식점 지정
     'http://openapi.jongno.go.kr:8088/56586a6766746a6435344e6369494b/xml/JongnoModelRestaurantDesignate/1/71/',
-    # 24. 중구 모범음식점 지정
+# 24. 중구 모범음식점 지정
     'http://openapi.junggu.seoul.kr:8088/56586a6766746a6435344e6369494b/xml/JungguModelRestaurantDesignate/1/129/',
-    # 25. 중랑구 모범음식점 지정
+# 25. 중랑구 모범음식점 지정
     'http://openapi.jungnang.seoul.kr:8088/56586a6766746a6435344e6369494b/xml/JungnangModelRestaurantDesignate/1/79/'
-# URL 잘 나오고 있음
-]
+] # URL 잘 나오고 있음
 def get_restaurant_seoul():
     # GET Param 방식 요청
-    # API_KEY = '56586a6766746a6435344e6369494b'
-    # API_KEY_decode = requests.utils.unquote(API_KEY)
     all_restaurant_data = []
 # 요청 및 응답
     for url in SEOUL_API_URLS:
         try:
             response = requests.get(url)
             response.raise_for_status()
+            dict_data = xmltodict.parse(response.content)
+            restaurant_items = None
+            if 'response' in dict_data:
+                restaurant_items = dict_data['response'].get('row')
+            elif 'GnModelRestaurantDesignate' in dict_data: # 1. 강남구
+                restaurant_items = dict_data['GnModelRestaurantDesignate'].get('row')
+            elif 'GdModelRestaurantDesignate' in dict_data: # 2. 강동구
+                restaurant_items = dict_data['GdModelRestaurantDesignate'].get('row')
+            elif 'GbModelRestaurantDesignate' in dict_data: # 3. 강북구
+                restaurant_items = dict_data['GbModelRestaurantDesignate'].get('row')
+            elif 'GangseoModelRestaurantDesignate' in dict_data: # 4. 강서구
+                restaurant_items = dict_data['GangseoModelRestaurantDesignate'].get('row')
+            elif 'GaModelRestaurantDesignate' in dict_data: # 관악구
+                restaurant_items = dict_data['GaModelRestaurantDesignate'].get('row')
+            elif 'GwangjinModelRestaurantDesignate' in dict_data: # 광진구
+                restaurant_items = dict_data['GwangjinModelRestaurantDesignate'].get('row')
+            elif 'GuroModelRestaurantDesignate' in dict_data: # 구로구
+                restaurant_items = dict_data['GuroModelRestaurantDesignate'].get('row')
+            elif 'GeumcheonModelRestaurantDesignate' in dict_data: # 금천구
+                restaurant_items = dict_data['GeumcheonModelRestaurantDesignate'].get('row')
+            elif 'NwModelRestaurantDesignate' in dict_data: # 노원구
+                restaurant_items = dict_data['NwModelRestaurantDesignate'].get('row')
+            elif 'DobongModelRestaurantDesignate' in dict_data: # 도봉구
+                restaurant_items = dict_data['DobongModelRestaurantDesignate'].get('row')
+            elif 'DongdeamoonModelRestaurantDesignate' in dict_data: # 동대문구
+                restaurant_items = dict_data['DongdeamoonModelRestaurantDesignate'].get('row')
+            elif 'DjModelRestaurantDesignate' in dict_data: # 동작구
+                restaurant_items = dict_data['DjModelRestaurantDesignate'].get('row')
+            elif 'MpModelRestaurantDesignate' in dict_data: # 마포구
+                restaurant_items = dict_data['MpModelRestaurantDesignate'].get('row')
+            elif 'SeodaemunModelRestaurantDesignate' in dict_data: # 서대문구
+                restaurant_items = dict_data['SeodaemunModelRestaurantDesignate'].get('row')
+            elif 'ScModelRestaurantDesignate' in dict_data: # 서초구
+                restaurant_items = dict_data['ScModelRestaurantDesignate'].get('row')
+            elif 'SdModelRestaurantDesignate' in dict_data: # 성동구
+                restaurant_items = dict_data['SdModelRestaurantDesignate'].get('row')
+            elif 'SbModelRestaurantDesignate' in dict_data: # 성북구
+                restaurant_items = dict_data['SbModelRestaurantDesignate'].get('row')
+            elif 'SpModelRestaurantDesignate' in dict_data: # 송파구
+                restaurant_items = dict_data['SpModelRestaurantDesignate'].get('row')
+            elif 'YcModelRestaurantDesignate' in dict_data: # 양천구
+                restaurant_items = dict_data['YcModelRestaurantDesignate'].get('row')
+            elif 'YdpModelRestaurantDesignate' in dict_data: # 영등포구
+                restaurant_items = dict_data['YdpModelRestaurantDesignate'].get('row')
+            elif 'YsModelRestaurantDesignate' in dict_data: # 용산구
+                restaurant_items = dict_data['YsModelRestaurantDesignate'].get('row')
+            elif 'EpModelRestaurantDesignate' in dict_data: # 은평구
+                restaurant_items = dict_data['EpModelRestaurantDesignate'].get('row')
+            elif 'JongnoModelRestaurantDesignate' in dict_data: # 종로구
+                restaurant_items = dict_data['JongnoModelRestaurantDesignate'].get('row')
+            elif 'JungguModelRestaurantDesignate' in dict_data: # 중구
+                restaurant_items = dict_data['JungguModelRestaurantDesignate'].get('row')
+            elif 'JungnangModelRestaurantDesignate' in dict_data: # 중랑구
+                restaurant_items = dict_data['JungnangModelRestaurantDesignate'].get('row')
+            if not restaurant_items:
+                logging.error(f"Unexpected structure for URL: {url}")
+                continue
+            for item in restaurant_items:
+                tname = item.get('UPSO_NM', "")
+                main = item.get('MAIN_EDF', "")
+                taddr = item.get('SITE_ADDR_RD') if item.get('SITE_ADDR_RD') else item.get('SITE_ADDR', "")
+                phone = item.get('UPSO_SITE_TELNO', "")
+# 디버그 로깅 추가
+                logging.debug(f"Processing restaurant: {tname}, Main: {main}, Address: {taddr}, Phone: {phone}")
+                data = {
+                    'tname': tname,
+                    'tcategory': '맛집',
+                    'main': main if main else "",
+                    'taddr': taddr if taddr else "",
+                    'phone': phone if phone else ""
+                }
+                all_restaurant_data.append(data)
+# 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
+            url1 = 'http://localhost:8222/api/travel'
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url1, data=json.dumps(all_restaurant_data), headers=headers)
+            if response.status_code == 200:  # 응답 확인
+                print('데이터 전송 성공')
+            else:
+                logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
         except requests.exceptions.RequestException as e:
-            continue  # 오류가 발생하면 해당 구역을 건너뜀
-# XML 파싱
-        try:
-            dict_data = xmltodict.parse(response.text)
-            restaurant_items = dict_data['row']
-        except KeyError:
-            continue  # 응답 형식이 다르거나 오류가 있을 경우 건너뜀
-        for item in restaurant_items:
-            data = {
-                'tname': item.get('UPSO_NM'),
-                'tcategory': '맛집',
-                'main': item.get('MAIN_EDF'),
-                'taddr': item.get('SITE_ADDR_RD'),
-                'phone': item.get('UPSO_SITE_TELNO')
-            }
-            all_restaurant_data.append(data)
-# 스프링 부트 RestController 엔드포인트 URL
-#         url1 = 'http://localhost:8222/api/travel'
-#         headers = {"Content-Type": "application/json"}
-#         response = requests.post(url1, data=json.dumps(all_restaurant_data), headers=headers)
-#         if response.status_code == 200:  # 응답 확인
-#             print('데이터 전송 성공')
-#         else:
-#             print('데이터 전송 실패')
+            logging.error(f"Request failed for URL: {url}, Error: {e}")
+        except KeyError as e:
+            logging.error(f"Parsing error for URL: {url}, Missing Key: {e}")
+        except Exception as e:
+            logging.error(f"An error occurred for URL: {url}, Error: {e}")
     return jsonify(all_restaurant_data)
 
 # 경기도_맛집 현황
