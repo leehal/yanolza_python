@@ -68,6 +68,7 @@ def get_hot_spring():
         response = requests.get(url)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching hot spring data: {str(e)}")
         return Response(f"Error: {str(e)}", status=500)
     soup = BeautifulSoup(response.content, 'xml')
     items = soup.find_all('row')
@@ -79,7 +80,7 @@ def get_hot_spring():
         road_addr = item.find('REFINE_ROADNM_ADDR')
         lot_addr = item.find('REFINE_LOTNO_ADDR')
         taddr = road_addr.text if road_addr and road_addr.text.strip() else (lot_addr.text if lot_addr else '정보없음')
-        if not taddr: # 주소 없으면 출력 X
+        if not taddr:
             continue
         info = item.find('INGRDNT_NM').text if item.find('INGRDNT_NM') else '정보없음'
         info = f"성분명 : {info}"
@@ -97,11 +98,14 @@ def get_hot_spring():
 # 스프링 부트 RestController 엔드포인트 URL
     url1 = 'http://localhost:8222/api/travel'
     headers = {"Content-Type": "application/json"}
-    response = requests.post(url1, data=json.dumps(place_data), headers=headers)
-    if response.status_code == 200:
-        print('데이터 전송 성공')
-    else:
-        logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+    try:
+        response = requests.post(url1, data=json.dumps(place_data), headers=headers)
+        if response.status_code == 200:
+            logging.info('데이터 전송 성공')
+        else:
+            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+    except requests.exceptions.RequestException as e:
+        logging.error(f'데이터 전송 예외 발생: {str(e)}')
     response_text = ""
     for data in place_data:
         response_text += f"tname : {data['tname']}\n"

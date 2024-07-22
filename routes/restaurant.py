@@ -287,10 +287,8 @@ def get_restaurant_ccnd():
 # 경상남도 김해시_음식점 정보(https://www.gimhae.go.kr/00761/00832/05867.web)
 # 데이터 포맷 : JSON
 def get_restaurant_ghs():
-# URL 잘 나오고 있음
+# URL 잘 나오고 있음 ( pageunit = 269, page = 27 )
     url = 'http://www.gimhae.go.kr/openapi/tour/restaurant.do?pageunit=10&page=27'
-    # pageunit = 269
-    # page = 27
     try:
 # JSON 데이터 가져오기
         response = requests.get(url)
@@ -321,14 +319,17 @@ def get_restaurant_ghs():
             }
             restaurant_data.append(restaurant)
 # 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
-        url1 = 'http://localhost:8222/api/travel'
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(url1, data=json.dumps(restaurant_data), headers=headers)
-        if response.status_code == 200:  # 응답 확인
-            print('데이터 전송 성공')
-        else:
-            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
-        # HTML 템플릿을 사용하여 결과를 반환
+        try:
+            url1 = 'http://localhost:8222/api/travel'
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url1, data=json.dumps(restaurant_data), headers=headers)
+            if response.status_code == 200:  # 응답 확인
+                print('데이터 전송 성공')
+            else:
+                logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+        except Exception as e:
+            logging.error(f"데이터 전송 예외 발생: {str(e)}")
+# HTML 템플릿을 사용하여 결과를 반환
         html_template = """
             <!DOCTYPE html>
             <html lang="ko">
@@ -356,6 +357,7 @@ def get_restaurant_ghs():
             """
         return render_template_string(html_template, restaurant_data=restaurant_data)
     except Exception as e:
+        logging.error(f"Error: {str(e)}")
         return f"Error: {str(e)}", 500
 # 성공!
 
