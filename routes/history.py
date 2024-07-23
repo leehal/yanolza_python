@@ -73,28 +73,32 @@ def get_open_port_ic():
         # JSON 데이터 가져오기
         response = requests.get(url)
         response.raise_for_status()  # HTTP 상태 코드가 200이 아닌 경우 예외 발생
-        print(response.text)
-        data = response.json()
+        # HTML 엔티티 디코딩
+        response_text = response.text
+        data = json.loads(response_text.replace('&quot;', '"').replace('&#034;', '"'))
         # 필요한 데이터 추출하여 ports 리스트에 저장
         ports = data.get('dataList', [])
         ports_data = []
         for item in ports:
+            phone = item.get('trrsrtTelNo', 'N/A')
+            if phone == '000-0000-0000' or '000-000-0000':
+                phone = ''  # 빈 문자열로 설정
             port = {
                 'tname': item.get('trrsrtNm', 'N/A'),
                 'taddr': item.get('trrsrtAddr', 'N/A'),
                 'tcategory': '관광',
-                'phone': item.get('trrsrtTelNo', 'N/A'),
+                'phone': phone,
                 'time': item.get('trrsrtBsnTimeCn', 'N/A')
             }
             ports_data.append(port)
 # 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
-        # url1 = 'http://localhost:8222/api/travel'
-        # headers = {"Content-Type": "application/json"}
-        # response = requests.post(url1, data=json.dumps(ports_data), headers=headers)
-        # if response.status_code == 200:  # 응답 확인
-        #     print('데이터 전송 성공')
-        # else:
-        #     print('데이터 전송 실패')
+        url1 = 'http://localhost:8222/api/travel'
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url1, data=json.dumps(ports_data), headers=headers)
+        if response.status_code == 200:  # 응답 확인
+            print('데이터 전송 성공')
+        else:
+            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
         # HTML 템플릿을 사용하여 결과를 반환
         html_template = """
             <!DOCTYPE html>
@@ -112,12 +116,13 @@ def get_open_port_ic():
                 {% endfor %}
             </body>
             </html>
-            """
+        """
         return render_template_string(html_template, ports=ports_data)
     except requests.exceptions.RequestException as e:
         return f"Error: {str(e)}", 500
     except json.JSONDecodeError as e:
         return f"Error: Invalid JSON response - {str(e)}", 500
+# 성공!
 
 # 문화체육관광부_역사가 있는 여행 이야기 (적합한 내용의 API 맞는지 검토 결과 아닌 걸로 판명됨)
 # https://www.culture.go.kr/data/openapi/openapiView.do?id=525&keyword=%EC%97%AD%EC%82%AC%EA%B0%80&searchField=all&gubun=A
