@@ -313,13 +313,76 @@ def get_lodge_ghs():
     except Exception as e:
         logging.error(f"Error: {str(e)}")
         return f"Error: {str(e)}", 500
-
+# 성공!
 
 # 경상남도 진주시_숙박시설
 # 데이터 포맷 : JSON
 def get_lodge_jjs():
     url = 'https://www.jinju.go.kr/openapi/tour/lodging.do'
 # url 잘 나옴
+    try:
+        # HTTP GET 요청
+        response = requests.get(url)
+        data = response.json()
+        lodges = data.get('results', [])
+        lodge_data = []
+        for item in lodges:
+            timage = item.get("images")
+            if isinstance(timage, list):
+                timage = timage[0] if timage else ""
+            taddr = item.get("address", "")
+            if not taddr.startswith("경상남도"):
+                taddr = "경상남도 " + taddr
+            # 숙박 데이터 추가
+            lodge = {
+                "tname": item.get("name", "N/A"),
+                "tcategory": "숙박",
+                "taddr": taddr,
+                "homepage": item.get("homepage", "N/A"),
+                "phone": item.get("phone", "N/A"),
+                "time": item.get("checktime", "N/A"),
+                "vehicle": item.get("park", "N/A"),
+                "info": item.get("content", "N/A"),
+                "guide": item.get("information", "N/A"),
+                "timage": timage
+            }
+            lodge_data.append(lodge)
+# 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
+        url1 = 'http://localhost:8222/api/travel'
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url1, data=json.dumps(lodge_data), headers=headers)
+        if response.status_code == 200:  # 응답 확인
+            print('데이터 전송 성공')
+        else:
+            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+# HTML 템플릿 생성 및 데이터 렌더링
+        template = """
+            <!doctype html>
+            <html lang="ko">
+              <head>
+                <meta charset="utf-8">
+              </head>
+              <body>
+                <h4>진주 숙박 정보</h4>
+                {% for lodge in lodges %}
+                  <p>tname : {{ lodge.tname }}</h2>
+                  <p>tcategory : 숙박</p>
+                  <p>taddr : {{ lodge.taddr }}</p>
+                  <p>homepage : {{ lodge.homepage }}</p>
+                  <p>phone : {{ lodge.phone }}</p>
+                  <p>time : {{ lodge.time }}</p>
+                  <p>vehicle : {{ lodge.vehicle }}</p>
+                  <p>info : {{ lodge.info }}</p>
+                  <p>guide : {{ lodge.guide }}</p>
+                  <p>timage : <img src="{{ lodge.timage }}" alt="숙박업소 이미지"></p><hr>
+                {% endfor %}
+              </body>
+            </html>
+            """
+        return render_template_string(template, lodges=lodge_data)
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        return f"Error: {str(e)}", 500
 
 # 전북특별자치도_관광지숙박 정보
 # 데이터 포맷 : XML

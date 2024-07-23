@@ -5,7 +5,7 @@ from routes.tracking import get_bicycle
 from routes.festival import get_festival_ic, festival_jjs_bp, festival_wss_bp, get_festival_djs, festival_ghs_bp, festival_ccnd_bp
 from routes.forest import get_plant, get_trail
 from routes.history import get_history_im, get_open_port_ic
-from routes.lodge import get_lodge_ggd, get_lodge_sjs, get_lodge_seoul, get_lodge_ccnd, get_lodge_dgs, get_lodge_ghs
+from routes.lodge import get_lodge_ggd, get_lodge_sjs, get_lodge_seoul, get_lodge_ccnd, get_lodge_dgs, get_lodge_ghs, get_lodge_jjs
 from routes.mountain import mountain_bp
 from routes.play import get_play_sac, get_play_mcst
 from routes.restaurant import get_restaurant_seoul, get_restaurant_ggd, get_restaurant_jn, get_restaurant_ccnd, get_restaurant_ghs, get_restaurant_dgs
@@ -40,6 +40,7 @@ app.add_url_rule('/api/lodge-ccnd', 'get_lodge_ccnd', get_lodge_ccnd, methods=['
 app.add_url_rule('/api/lodge-dgs', 'get_lodge_dgs', get_lodge_dgs, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/lodge-ggd', 'get_lodge_ggd', get_lodge_ggd, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/lodge-ghs', 'get_lodge_ghs', get_lodge_ghs, methods=['GET']) # 잘 나와!
+app.add_url_rule('/api/lodge-jjs', 'get_lodge_jjs', get_lodge_jjs, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/lodge-sjs', 'get_lodge_sjs', get_lodge_sjs, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/play-mcst', 'get_play_mcst', get_play_mcst, methods=['GET'])
 app.add_url_rule('/api/play-sac', 'get_play_sac', get_play_sac, methods=['GET']) # 잘 나와!
