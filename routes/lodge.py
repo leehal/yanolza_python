@@ -236,11 +236,83 @@ def get_lodge_gjs():
     API_KEY = 'KyWZFbqa18xa0lm8HRhyexgvbK%2BRVv0pzL2mNe1IaZXLpcPgeiWPK9MU4vju7yz%2F8SFykfu4KO%2FpXu%2FSuRP3ig%3D%3D'
     API_KEY_decode = requests.utils.unquote(API_KEY)
 
-# 경상남도 김해시_숙박업 정보
+# 경상남도 김해시_숙박업 정보 (https://www.gimhae.go.kr/00761/00832/05866.web)
 # 데이터 포맷 : JSON
 def get_lodge_ghs():
-# url 잘 나옴
-    url = 'http://www.gimhae.go.kr/openapi/tour/lodging.do'
+# url 잘 나옴 (record_count 169, pageunit 최대 10이니까 page (1~17) 숫자 적절히 바꿀 것)
+    url = 'http://www.gimhae.go.kr/openapi/tour/lodging.do?pageunit=10&page=17'
+    try:
+# JSON 데이터 가져오기
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+# 필요한 데이터 추출하여 리스트에 저장
+        lodges = data['results']
+        lodge_data = []
+        for item in lodges:
+            timage = item.get("images")
+            if isinstance(timage, list):
+                timage = timage[0] if timage else ""
+            taddr = item.get('address', 'N/A')
+            # if not taddr.startswith('경상남도 김해시'):
+            #     if taddr.startswith('김해시'):
+            #         taddr = '경상남도 ' + taddr
+            #     else:
+            #         taddr = '경상남도 김해시 ' + taddr
+            lodge = {
+                'tname': item.get('name', 'N/A'),
+                'taddr': taddr,
+                'tcategory': '숙박',
+                'timage': timage,
+                'phone': item.get('phone', 'N/A'),
+                'time': item.get('checktime', 'N/A'),
+                'homepage': item.get('homepage', 'N/A'),
+                'vehicle': item.get('park', 'N/A'),
+                'info': item.get('content', 'N/A')
+            }
+            lodge_data.append(lodge)
+# 스프링 부트 RestController 엔드포인트 URL로 데이터 전송
+        try:
+            url1 = 'http://localhost:8222/api/travel'
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url1, data=json.dumps(lodge_data), headers=headers)
+            if response.status_code == 200:  # 응답 확인
+                print('데이터 전송 성공')
+            else:
+                logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+        except Exception as e:
+            logging.error(f"데이터 전송 예외 발생: {str(e)}")
+# HTML 템플릿을 사용하여 결과를 반환
+        html_template = """
+            <!DOCTYPE html>
+            <html lang="ko">
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body>
+                {% for lodge in lodge_data %}
+                    <h4>tname : {{ lodge.tname }}</h2>
+                    <p>tcategory : 숙박</p>
+                    <p>taddr : {{ lodge.taddr }}</p>
+                    <p>info : {{ lodge.info }}</p>
+                    <p>phone : {{ lodge.phone }}</p>
+                    <p>time : {{ lodge.time }}</p>
+                    <p>homepage : {{ lodge.homepage }}</p>
+                    <p>vehicle : {{ lodge.vehicle }}</p>
+                    <p>timage : 
+                        {% if lodge.timage %}
+                            <img src="{{ lodge.timage }}" alt="맛집 이미지">
+                        {% else %}
+                        {% endif %}
+                    </p><hr>
+                {% endfor %}
+            </body>
+            </html>
+            """
+        return render_template_string(html_template, lodge_data=lodge_data)
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        return f"Error: {str(e)}", 500
 
 
 # 경상남도 진주시_숙박시설
