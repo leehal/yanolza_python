@@ -61,7 +61,7 @@ def get_fishing_ggd():
 # (경기도) 온천 현황
 # https://data.gg.go.kr/portal/data/service/selectServicePage.do?page=1&rows=10&sortColumn=&sortDirection=&infId=2F62SUW995PMYQ1223B311745685&infSeq=3&order=&loc=
 # 데이터 포맷 : XML
-def get_hot_spring():
+def get_hot_spring_ggd():
 # GET Param 방식 요청
     url = 'https://openapi.gg.go.kr/HotSpringStatus?KEY=c8e63555aeb3495e8ab0f6e0dca54651&Type=xml&pIndex=1&pSize=47'
     try:
@@ -133,7 +133,7 @@ def get_beach():
             response.raise_for_status() # HTTP 오류 발생 시 예외 발생
             try:
                 dict_data = response.json() # JSON 형태의 응답을 시도하고 실패 시 XML로 처리
-                logging.info(f"Received JSON response for {layer}: {json.dumps(dict_data, ensure_ascii=False, indent=4)}")
+                logging.info(f"Received JSON response for {layer}")
                 if 'response' in dict_data and 'body' in dict_data['response'] and 'items' in dict_data['response']['body']:
                     beach_items = dict_data['response']['body']['items']['item']
                 else:
@@ -141,7 +141,7 @@ def get_beach():
                     continue
             except json.JSONDecodeError:
                 soup = BeautifulSoup(response.content, 'xml')
-                logging.info(f"Received XML response for {layer}: {soup.prettify()}")
+                logging.info(f"Received XML response for {layer}")
                 beach_items = soup.find_all('item')
             for item in beach_items:
                 taddr = item.find('sigunguNm').text if item.find('sigunguNm') else ""
@@ -174,18 +174,16 @@ def get_beach():
         except Exception as e:
             logging.error(f"Error processing data from {layer}: {str(e)}")
 # 스프링 부트 RestController 엔드포인트 URL
-    url1 = 'http://localhost:8222/api/travel'
-    headers = {"Content-Type": "application/json"}
-    try:
-        response = requests.post(url1, data=json.dumps(all_beach_data), headers=headers)
-        if response.status_code == 200:
-            print('데이터 전송 성공')
-        else:
-            logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
-    except requests.exceptions.RequestException as e:
-        logging.error(f"데이터 전송 예외 발생: {str(e)}")
-
-        # JSON 형태로 변환하여 반환
-    json_beach = json.dumps(all_beach_data, ensure_ascii=False, indent=4)
+#     url1 = 'http://localhost:8222/api/travel'
+#     headers = {"Content-Type": "application/json"}
+#     try:
+#         response = requests.post(url1, data=json.dumps(all_beach_data), headers=headers)
+#         if response.status_code == 200:
+#             print('데이터 전송 성공')
+#         else:
+#             logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
+#     except requests.exceptions.RequestException as e:
+#         logging.error(f"데이터 전송 예외 발생: {str(e)}")
+    json_beach = json.dumps(all_beach_data, ensure_ascii=False, indent=4) # JSON 형태로 변환하여 반환
     return Response(json_beach, content_type='application/json')
 # 성공!

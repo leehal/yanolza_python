@@ -146,7 +146,7 @@ def get_restaurant_seoul():
             headers = {"Content-Type": "application/json"}
             response = requests.post(url1, data=json.dumps(all_restaurant_data), headers=headers)
             if response.status_code == 200:  # 응답 확인
-                print('데이터 전송 성공')
+                logging.error(f'데이터 전송 성공 : {url}')
             else:
                 logging.error(f'데이터 전송 실패 : {response.status_code}, {response.text}')
         except requests.exceptions.RequestException as e:
@@ -287,7 +287,7 @@ def get_restaurant_ccnd():
 # 경상남도 김해시_음식점 정보(https://www.gimhae.go.kr/00761/00832/05867.web)
 # 데이터 포맷 : JSON
 def get_restaurant_ghs():
-# URL 잘 나오고 있음 ( pageunit = 269, page = 27 )
+# URL 잘 나오고 있음 ( pageunit = 269, page = 1~27 )
     url = 'http://www.gimhae.go.kr/openapi/tour/restaurant.do?pageunit=10&page=27'
     try:
 # JSON 데이터 가져오기

@@ -80,15 +80,18 @@ def get_open_port_ic():
         ports = data.get('dataList', [])
         ports_data = []
         for item in ports:
-            phone = item.get('trrsrtTelNo', 'N/A')
-            if phone == '000-0000-0000' or '000-000-0000':
+            phone = item.get('trrsrtTelNo', '')
+            if phone in ['000-0000-0000', '000-000-0000']:
                 phone = ''  # 빈 문자열로 설정
+            time = item.get('trrsrtBsnTimeCn', '')
+            if time == '-':
+                time = ''
             port = {
                 'tname': item.get('trrsrtNm', 'N/A'),
                 'taddr': item.get('trrsrtAddr', 'N/A'),
                 'tcategory': '관광',
                 'phone': phone,
-                'time': item.get('trrsrtBsnTimeCn', 'N/A')
+                'time': time
             }
             ports_data.append(port)
 # 스프링 부트 RestController 엔드포인트 URL로 데이터 전송

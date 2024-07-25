@@ -217,6 +217,7 @@ def get_lodge_dgs():
         return jsonify(results)
     except Exception as e:
         return Response(f"Error: {str(e)}", status=500)
+# 성공!
 
 # 대전광역시 문화관광(숙박정보)
 # 데이터 포맷 : JSON
@@ -383,16 +384,61 @@ def get_lodge_jjs():
     except Exception as e:
         logging.error(f"Error: {str(e)}")
         return f"Error: {str(e)}", 500
+# 성공!
 
-# 전북특별자치도_관광지숙박 정보
+# 전북특별자치도_관광지숙박 정보 (https://www.data.go.kr/data/15106763/openapi.do)
 # 데이터 포맷 : XML
-def get_lodge_jb():
-    API_KEY = 'KyWZFbqa18xa0lm8HRhyexgvbK%2BRVv0pzL2mNe1IaZXLpcPgeiWPK9MU4vju7yz%2F8SFykfu4KO%2FpXu%2FSuRP3ig%3D%3D'
-    API_KEY_decode = requests.utils.unquote(API_KEY)
+def get_lodge_jlbd():
+    try:
+        url = 'https://apis.data.go.kr/6450000/TouristAccoService/getTouristAcco?serviceKey=KyWZFbqa18xa0lm8HRhyexgvbK%2BRVv0pzL2mNe1IaZXLpcPgeiWPK9MU4vju7yz%2F8SFykfu4KO%2FpXu%2FSuRP3ig%3D%3D&Area=12&Category=01'
+# url 잘 나오는 중 (지역코드 Area 01~14, 숙박시설분류 Catetory 01~07)
+        response = requests.get(url)
+        if response.status_code != 200:
+            return Response(f"Error: Unable to fetch data, status code: {response.status_code}", status=500)
+        soup = BeautifulSoup(response.content, 'xml')
+        items = soup.find_all('item')
+        lodges = []
+        for item in items:
+            lodge = {
+                'tname': item.find('name').text if item.find('name') else 'N/A',
+                'timage': item.find('img').text if item.find('img') else 'N/A',
+                'taddr': item.find('address1').text if item.find('address1') else 'N/A',
+                'phone': item.find('tel').text if item.find('tel') else 'N/A',
+                'info': item.find('overview').text if item.find('overview') else 'N/A'
+            }
+            lodges.append(lodge)
+        html_template = '''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>전북특별자치도 관광지 숙박 정보</title>
+        </head>
+        <body>
+            <h4>전북특별자치도 관광지 숙박 정보</h1>
+            <ul>
+            {% for lodge in lodges %}
+                <li>
+                    <h2>{{ lodge.tname }}</h2>
+                    <img src="{{ lodge.timage }}" alt="{{ lodge.tname }}">
+                    <p>주소: {{ lodge.taddr }}</p>
+                    <p>전화번호: {{ lodge.phone }}</p>
+                    <p>정보: {{ lodge.info }}</p>
+                </li>
+            {% endfor %}
+            </ul>
+        </body>
+        </html>
+        '''
+        return render_template_string(html_template, lodges=lodges)
+    except Exception as e:
+        return Response(f"Error: {str(e)}", status=500)
 
-# 전라남도_전남 숙박 정보
+# 전라남도_전남 숙박 정보 (https://www.data.go.kr/data/15081425/openapi.do)
 # 데이터 포맷 : XML
 def get_lodge_jn():
+    url = 'http://apis.data.go.kr/6460000/jnLodgeist/getNdLodgeView'
     API_KEY = 'KyWZFbqa18xa0lm8HRhyexgvbK%2BRVv0pzL2mNe1IaZXLpcPgeiWPK9MU4vju7yz%2F8SFykfu4KO%2FpXu%2FSuRP3ig%3D%3D'
     API_KEY_decode = requests.utils.unquote(API_KEY)
 
