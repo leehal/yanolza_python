@@ -1,6 +1,6 @@
 from flask import Flask
 
-from routes.water import get_beach, get_fishing_ggd, get_hot_spring
+from routes.water import get_beach, get_fishing_ggd, get_hot_spring_ggd
 from routes.tracking import get_bicycle
 from routes.festival import get_festival_ic, festival_jjs_bp, festival_wss_bp, get_festival_djs, festival_ghs_bp, festival_ccnd_bp
 from routes.forest import get_plant, get_trail
@@ -27,7 +27,7 @@ app.register_blueprint(festival_ccnd_bp)
 
 # url에 _ 쓰지 않게 주의
 app.add_url_rule('/api/fishing-ggd', 'get_fishing_ggd', get_fishing_ggd, methods=['GET']) # 잘 나와!
-app.add_url_rule('/api/hot-spring', 'get_hot_spring', get_hot_spring, methods=['GET']) # 잘 나와!
+app.add_url_rule('/api/hot-spring-ggd', 'get_hot_spring_ggd', get_hot_spring_ggd, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/beach', 'get_beach', get_beach, methods=['GET']) # 잘 나와!
 app.add_url_rule('/api/bicycle', 'get_bicycle', get_bicycle, methods=['GET']) # ㄴㄴ
 app.add_url_rule('/api/plant', 'get_plant', get_plant, methods=['GET']) # 잘 나와!
